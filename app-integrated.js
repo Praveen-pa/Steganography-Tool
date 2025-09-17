@@ -1177,3 +1177,470 @@ function updateBitSequenceDisplay() {
         ${secretData.content.length > 10 ? '<span style="color: var(--color-text-secondary);">... [more data]</span>' : ''}
     `;
 }
+
+// Add these functions to your app-integrated.js file
+
+// =============================== 
+// MODIFIED PIXELS LIST FUNCTIONS
+// ===============================
+
+let modifiedPixelsData = [];
+let currentFilter = 'all';
+let currentView = 'compact';
+let currentPage = 1;
+const pixelsPerPage = 50;
+
+// Initialize modified pixels list functionality
+function initializeModifiedPixelsList() {
+    setupViewToggle();
+    setupChannelFilter();
+    setupPagination();
+    setupExportFunction();
+}
+
+// Setup view toggle between compact and detailed
+function setupViewToggle() {
+    const viewToggleBtn = document.getElementById('view-toggle-btn');
+    const compactView = document.getElementById('compact-view');
+    const detailedView = document.getElementById('detailed-view');
+    
+    if (viewToggleBtn && compactView && detailedView) {
+        viewToggleBtn.addEventListener('click', () => {
+            if (currentView === 'compact') {
+                currentView = 'detailed';
+                compactView.classList.remove('active');
+                detailedView.classList.add('active');
+                viewToggleBtn.textContent = '📋 Switch to Compact View';
+                viewToggleBtn.dataset.view = 'detailed';
+            } else {
+                currentView = 'compact';
+                detailedView.classList.remove('active');
+                compactView.classList.add('active');
+                viewToggleBtn.textContent = '📊 Switch to Detailed View';
+                viewToggleBtn.dataset.view = 'compact';
+            }
+            displayModifiedPixels();
+        });
+    }
+}
+
+// Setup channel filter
+function setupChannelFilter() {
+    const channelFilter = document.getElementById('channel-filter');
+    
+    if (channelFilter) {
+        channelFilter.addEventListener('change', (e) => {
+            currentFilter = e.target.value;
+            currentPage = 1;
+            displayModifiedPixels();
+        });
+    }
+}
+
+// Setup pagination
+function setupPagination() {
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                displayModifiedPixels();
+            }
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            const filteredData = getFilteredPixelData();
+            const totalPages = Math.ceil(filteredData.length / pixelsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayModifiedPixels();
+            }
+        });
+    }
+}
+
+// Setup export function
+function setupExportFunction() {
+    const exportBtn = document.getElementById('export-pixel-list');
+    
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportPixelListToCSV);
+    }
+}
+
+// Generate modified pixels data from tutorial canvases
+function generateModifiedPixelsData() {
+    if (!tutorialData.originalCanvas || !tutorialData.stegoCanvas) {
+        return [];
+    }
+    
+    const originalCtx = tutorialData.originalCanvas.getContext('2d');
+    const stegoCtx = tutorialData.stegoCanvas.getContext('2d');
+    
+    const originalImageData = originalCtx.getImageData(0, 0, tutorialData.originalCanvas.width, tutorialData.originalCanvas.height);
+    const stegoImageData = stegoCtx.getImageData(0, 0, tutorialData.stegoCanvas.width, tutorialData.stegoCanvas.height);
+    
+    const originalPixels = originalImageData.data;
+    const stegoPixels = stegoImageData.data;
+    
+    const modifiedPixels = [];
+    let pixelIndex = 0;
+    
+    // Analyze each pixel
+    for (let i = 0; i < originalPixels.length; i += 4) {
+        const x = pixelIndex % tutorialData.originalCanvas.width;
+        const y = Math.floor(pixelIndex / tutorialData.originalCanvas.width);
+        
+        const channels = ['red', 'green', 'blue'];
+        const pixelChanges = [];
+        
+        // Check each color channel
+        for (let j = 0; j < 3; j++) {
+            const originalValue = originalPixels[i + j];
+            const stegoValue = stegoPixels[i + j];
+            
+            if (originalValue !== stegoValue) {
+                const originalBinary = originalValue.toString(2).padStart(8, '0');
+                const stegoBinary = stegoValue.toString(2).padStart(8, '0');
+                const lsbChanged = (originalValue & 1) !== (stegoValue & 1);
+                const change = stegoValue - originalValue;
+                
+                pixelChanges.push({
+                    channel: channels[j],
+                    originalValue: originalValue,
+                    stegoValue: stegoValue,
+                    originalBinary: originalBinary,
+                    stegoBinary: stegoBinary,
+                    change: change,
+                    lsbChanged: lsbChanged
+                });
+            }
+        }
+        
+        if (pixelChanges.length > 0) {
+            modifiedPixels.push({
+                pixelIndex: pixelIndex,
+                x: x,
+                y: y,
+                changes: pixelChanges
+            });
+        }
+        
+        pixelIndex++;
+    }
+    
+    return modifiedPixels;
+}
+
+// Update modified pixels display
+function updateModifiedPixelsDisplay() {
+    modifiedPixelsData = generateModifiedPixelsData();
+    updateSummaryStats();
+    displayModifiedPixels();
+}
+
+// Update summary statistics
+function updateSummaryStats() {
+    const totalModifiedElement = document.getElementById('total-modified-pixels');
+    const percentageElement = document.getElementById('modification-percentage');
+    const channelsElement = document.getElementById('channels-modified');
+    
+    if (!totalModifiedElement || !percentageElement || !channelsElement) return;
+    
+    const totalPixels = tutorialData.originalCanvas ? 
+        tutorialData.originalCanvas.width * tutorialData.originalCanvas.height : 0;
+    const modifiedPixelsCount = modifiedPixelsData.length;
+    const percentage = totalPixels > 0 ? (modifiedPixelsCount / totalPixels * 100).toFixed(4) : 0;
+    
+    // Count total channel changes
+    let totalChannelChanges = 0;
+    modifiedPixelsData.forEach(pixel => {
+        totalChannelChanges += pixel.changes.length;
+    });
+    
+    totalModifiedElement.textContent = modifiedPixelsCount.toLocaleString();
+    percentageElement.textContent = `${percentage}%`;
+    channelsElement.textContent = totalChannelChanges.toLocaleString();
+}
+
+// Filter pixel data based on selected channel
+function getFilteredPixelData() {
+    if (currentFilter === 'all') {
+        return modifiedPixelsData;
+    }
+    
+    return modifiedPixelsData.filter(pixel => 
+        pixel.changes.some(change => change.channel === currentFilter)
+    );
+}
+
+// Display modified pixels based on current view
+function displayModifiedPixels() {
+    if (currentView === 'compact') {
+        displayCompactView();
+    } else {
+        displayDetailedView();
+    }
+    updatePaginationControls();
+}
+
+// Display compact grid view
+function displayCompactView() {
+    const gridContainer = document.getElementById('modified-pixels-grid');
+    if (!gridContainer) return;
+    
+    const filteredData = getFilteredPixelData();
+    
+    if (filteredData.length === 0) {
+        gridContainer.innerHTML = '<p class="no-data">No modified pixels found with current filter</p>';
+        return;
+    }
+    
+    const startIndex = (currentPage - 1) * pixelsPerPage;
+    const endIndex = Math.min(startIndex + pixelsPerPage, filteredData.length);
+    const pageData = filteredData.slice(startIndex, endIndex);
+    
+    const pixelCards = pageData.map(pixel => {
+        const channelChangesHtml = pixel.changes
+            .filter(change => currentFilter === 'all' || change.channel === currentFilter)
+            .map(change => `
+                <div class="channel-change ${change.channel}">
+                    <span class="channel-name">${change.channel.toUpperCase()}</span>
+                    <div class="value-change">
+                        <span class="original-val">${change.originalValue}</span>
+                        <span>→</span>
+                        <span class="modified-val">${change.stegoValue}</span>
+                        <span class="change-indicator ${change.change > 0 ? 'positive' : 'negative'}">
+                            ${change.change > 0 ? '+' : ''}${change.change}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        
+        const hasLSBChange = pixel.changes.some(change => change.lsbChanged);
+        
+        return `
+            <div class="pixel-card modified" data-pixel="${pixel.pixelIndex}">
+                ${hasLSBChange ? '<div class="lsb-badge">LSB</div>' : ''}
+                <div class="pixel-header">
+                    <span class="pixel-number">#${pixel.pixelIndex}</span>
+                    <span class="pixel-coords">(${pixel.x}, ${pixel.y})</span>
+                </div>
+                <div class="pixel-changes">
+                    ${channelChangesHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    gridContainer.innerHTML = pixelCards;
+    
+    // Add click listeners for pixel cards
+    gridContainer.querySelectorAll('.pixel-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const pixelIndex = parseInt(card.dataset.pixel);
+            highlightPixelInCanvas(pixelIndex);
+        });
+    });
+}
+
+// Display detailed table view
+function displayDetailedView() {
+    const tableBody = document.getElementById('modified-pixels-tbody');
+    if (!tableBody) return;
+    
+    const filteredData = getFilteredPixelData();
+    
+    if (filteredData.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="9" class="no-data">No modified pixels found with current filter</td></tr>';
+        return;
+    }
+    
+    const startIndex = (currentPage - 1) * pixelsPerPage;
+    const endIndex = Math.min(startIndex + pixelsPerPage, filteredData.length);
+    const pageData = filteredData.slice(startIndex, endIndex);
+    
+    const tableRows = [];
+    
+    pageData.forEach(pixel => {
+        const filteredChanges = pixel.changes.filter(change => 
+            currentFilter === 'all' || change.channel === currentFilter
+        );
+        
+        filteredChanges.forEach((change, index) => {
+            const isFirstRow = index === 0;
+            const rowSpan = isFirstRow ? ` rowspan="${filteredChanges.length}"` : '';
+            
+            tableRows.push(`
+                <tr class="modified-row">
+                    ${isFirstRow ? `<td${rowSpan} class="pixel-index">#${pixel.pixelIndex}</td>` : ''}
+                    ${isFirstRow ? `<td${rowSpan} class="pixel-position">(${pixel.x}, ${pixel.y})</td>` : ''}
+                    <td>
+                        <span class="channel-badge ${change.channel}">${change.channel.toUpperCase()}</span>
+                    </td>
+                    <td class="value-original">${change.originalValue}</td>
+                    <td class="value-modified">${change.stegoValue}</td>
+                    <td class="change-amount ${change.change > 0 ? 'positive' : 'negative'}">
+                        ${change.change > 0 ? '+' : ''}${change.change}
+                    </td>
+                    <td class="binary-display">${change.originalBinary}</td>
+                    <td class="binary-display">${change.stegoBinary}</td>
+                    <td class="lsb-status ${change.lsbChanged ? 'changed' : 'unchanged'}">
+                        ${change.lsbChanged ? '✓' : '—'}
+                    </td>
+                </tr>
+            `);
+        });
+    });
+    
+    tableBody.innerHTML = tableRows.join('');
+    
+    // Add click listeners for table rows
+    tableBody.querySelectorAll('tr').forEach(row => {
+        row.addEventListener('click', () => {
+            const pixelIndex = parseInt(row.querySelector('.pixel-index')?.textContent.replace('#', '') || '0');
+            if (pixelIndex > 0) {
+                highlightPixelInCanvas(pixelIndex);
+            }
+        });
+    });
+}
+
+// Update pagination controls
+function updatePaginationControls() {
+    const filteredData = getFilteredPixelData();
+    const totalPages = Math.ceil(filteredData.length / pixelsPerPage);
+    const startIndex = (currentPage - 1) * pixelsPerPage;
+    const endIndex = Math.min(startIndex + pixelsPerPage, filteredData.length);
+    
+    const paginationContainer = document.getElementById('pixel-pagination');
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+    const currentPageElement = document.getElementById('current-page');
+    const totalPagesElement = document.getElementById('total-pages');
+    const showingRangeElement = document.getElementById('showing-range');
+    const totalPixelsElement = document.getElementById('total-pixels');
+    
+    if (!paginationContainer) return;
+    
+    if (totalPages <= 1) {
+        paginationContainer.style.display = 'none';
+        return;
+    }
+    
+    paginationContainer.style.display = 'flex';
+    
+    if (prevBtn) prevBtn.disabled = currentPage <= 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    
+    if (currentPageElement) currentPageElement.textContent = currentPage;
+    if (totalPagesElement) totalPagesElement.textContent = totalPages;
+    if (showingRangeElement) showingRangeElement.textContent = `${startIndex + 1}-${endIndex}`;
+    if (totalPixelsElement) totalPixelsElement.textContent = filteredData.length;
+}
+
+// Highlight pixel in canvas
+function highlightPixelInCanvas(pixelIndex) {
+    const originalCanvas = document.getElementById('original-analysis-canvas');
+    const stegoCanvas = document.getElementById('stego-analysis-canvas');
+    
+    if (!originalCanvas || !stegoCanvas || !tutorialData.originalCanvas) return;
+    
+    const x = pixelIndex % tutorialData.originalCanvas.width;
+    const y = Math.floor(pixelIndex / tutorialData.originalCanvas.width);
+    
+    // Trigger the existing pixel analysis
+    tutorialData.currentPixelX = x;
+    tutorialData.currentPixelY = y;
+    displayPixelAnalysis(x, y);
+    
+    // Scroll canvas into view
+    originalCanvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// Export pixel list to CSV
+function exportPixelListToCSV() {
+    if (modifiedPixelsData.length === 0) {
+        showError('No modified pixels data to export');
+        return;
+    }
+    
+    let csvContent = 'Modified Pixels Report\n\n';
+    csvContent += 'Pixel Index,X Coordinate,Y Coordinate,Channel,Original Value,Modified Value,Change Amount,Original Binary,Modified Binary,LSB Changed\n';
+    
+    const filteredData = getFilteredPixelData();
+    
+    filteredData.forEach(pixel => {
+        pixel.changes.forEach(change => {
+            if (currentFilter === 'all' || change.channel === currentFilter) {
+                csvContent += `${pixel.pixelIndex},${pixel.x},${pixel.y},${change.channel},${change.originalValue},${change.stegoValue},${change.change},${change.originalBinary},${change.stegoBinary},${change.lsbChanged ? 'Yes' : 'No'}\n`;
+            }
+        });
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `modified-pixels-${currentFilter}-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showSuccess('Pixel list exported successfully!');
+}
+
+// Update the existing updateTutorialWithResults function
+function updateTutorialWithResults() {
+    if (!window.stegoCanvasForDownload || !coverImage) return;
+    
+    // Copy canvases for tutorial analysis
+    tutorialData.originalCanvas = coverImage.canvas;
+    tutorialData.stegoCanvas = window.stegoCanvasForDownload;
+    
+    // Update tutorial canvases (existing code)
+    const originalAnalysisCanvas = document.getElementById('original-analysis-canvas');
+    const stegoAnalysisCanvas = document.getElementById('stego-analysis-canvas');
+    
+    if (originalAnalysisCanvas && stegoAnalysisCanvas) {
+        // Set canvas dimensions
+        const maxWidth = 300;
+        const maxHeight = 200;
+        const scaleX = Math.min(maxWidth / tutorialData.originalCanvas.width, maxHeight / tutorialData.originalCanvas.height);
+        const scaleY = scaleX; // Keep aspect ratio
+        
+        originalAnalysisCanvas.width = Math.floor(tutorialData.originalCanvas.width * scaleX);
+        originalAnalysisCanvas.height = Math.floor(tutorialData.originalCanvas.height * scaleY);
+        stegoAnalysisCanvas.width = originalAnalysisCanvas.width;
+        stegoAnalysisCanvas.height = originalAnalysisCanvas.height;
+        
+        // Draw scaled images
+        const originalCtx = originalAnalysisCanvas.getContext('2d');
+        const stegoCtx = stegoAnalysisCanvas.getContext('2d');
+        
+        originalCtx.drawImage(tutorialData.originalCanvas, 0, 0, originalAnalysisCanvas.width, originalAnalysisCanvas.height);
+        stegoCtx.drawImage(tutorialData.stegoCanvas, 0, 0, stegoAnalysisCanvas.width, stegoAnalysisCanvas.height);
+        
+        // Update pixel info displays
+        document.getElementById('original-pixel-info').textContent = 'Click on a pixel to see its values';
+        document.getElementById('stego-pixel-info').textContent = 'Click on a pixel to see its values';
+    }
+    
+    // Update binary displays (existing code)
+    updateBinaryDisplays();
+    
+    // Update modified pixels display (new)
+    updateModifiedPixelsDisplay();
+}
+
+// Initialize when DOM is loaded (add to existing DOMContentLoaded listener)
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing initialization code ...
+    initializeTutorialSection();
+    initializeModifiedPixelsList(); // Add this line
+});
