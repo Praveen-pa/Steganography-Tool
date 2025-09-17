@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Image Steganography Tool</title>
+    <link rel="stylesheet" href="./style-complete.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🔐 Advanced Steganography Tool</h1>
+            <p class="subtitle">Secure image-based data hiding with AES-256 encryption</p>
+        </header>
+
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="encrypt">
+                <span class="mode-icon">🔒</span>
+                Encrypt & Embed
+            </button>
+            <button class="mode-btn" data-mode="decrypt">
+                <span class="mode-icon">🔓</span>
+                Decrypt & Extract
+            </button>
+            <button class="mode-btn" data-mode="tutorial">
+                <span class="mode-icon">🎓</span>
+                Tutorial
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Encrypt Mode -->
+            <div id="encrypt-mode" class="mode-content">
+                <div class="step-container">
+                    <!-- Step 1: Secret Data -->
+                    <div class="step">
+                        <h3>📝 Step 1: Choose Secret Data</h3>
+                        <div class="tabs">
+                            <button class="tab-btn active" data-tab="text">Text</button>
+                            <button class="tab-btn" data-tab="file">File</button>
+                        </div>
+
+                        <div id="text-tab" class="tab-content active">
+                            <label class="form-label" for="secret-text">Secret Text:</label>
+                            <textarea id="secret-text" class="form-control" rows="4" 
+                                placeholder="Enter your secret message here..."></textarea>
+                        </div>
+
+                        <div id="file-tab" class="tab-content">
+                            <label class="form-label">Secret File (Max 1MB):</label>
+                            <div id="secret-file-upload" class="file-upload">
+                                <div class="file-upload-content">
+                                    <div class="file-upload-icon">📄</div>
+                                    <p>Drag & drop a file here or click to browse</p>
+                                    <small>Supported: Any file type (Max 1MB)</small>
+                                </div>
+                                <input type="file" id="secret-file" accept="*/*">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Cover Image -->
+                    <div class="step">
+                        <h3>🖼️ Step 2: Choose Cover Image</h3>
+                        <label class="form-label">Cover Image (PNG/BMP only, Max 10MB):</label>
+                        <div id="cover-image-upload" class="file-upload">
+                            <div class="file-upload-content">
+                                <div class="file-upload-icon">🖼️</div>
+                                <p>Drag & drop an image here or click to browse</p>
+                                <small>Supported: PNG, BMP (Max 10MB)</small>
+                            </div>
+                            <input type="file" id="cover-image" accept=".png,.bmp,image/png,image/bmp">
+                        </div>
+                        <div id="cover-preview" class="image-preview"></div>
+                    </div>
+
+                    <!-- Step 3: Encryption Settings -->
+                    <div class="step">
+                        <h3>🔐 Step 3: Encryption Settings</h3>
+                        <div class="form-group">
+                            <label class="form-label" for="encrypt-passphrase">Passphrase (Min 6 characters):</label>
+                            <div class="password-input">
+                                <input type="password" id="encrypt-passphrase" class="form-control" 
+                                    placeholder="Enter a strong passphrase">
+                                <button type="button" id="encrypt-toggle" class="password-toggle">🙈</button>
+                            </div>
+                            <div class="password-strength">
+                                <div class="strength-bar">
+                                    <div class="strength-fill"></div>
+                                </div>
+                                <div class="strength-text">Enter a password</div>
+                            </div>
+                        </div>
+
+                        <button id="encrypt-btn" class="btn btn--primary btn--lg btn--full-width" disabled>
+                            <span class="btn-text">🚀 Encrypt & Embed Data</span>
+                            <div class="btn-loader"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div id="encrypt-progress" class="progress-container" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p class="progress-text">Initializing...</p>
+                </div>
+
+                <!-- Results -->
+                <div id="encrypt-results" class="results-container" style="display: none;">
+                    <h3>✅ Encryption Complete!</h3>
+                    
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <h4>Original Image</h4>
+                            <div id="original-preview"></div>
+                        </div>
+                        <div class="result-item">
+                            <h4>Stego Image</h4>
+                            <div id="stego-preview"></div>
+                        </div>
+                    </div>
+
+                    <div class="quality-metrics">
+                        <div class="metric">
+                            <span>Image Quality (PSNR)</span>
+                            <span id="psnr-value">-- dB</span>
+                        </div>
+                        <div class="metric">
+                            <span>Capacity Used</span>
+                            <span id="capacity-used">--%</span>
+                        </div>
+                    </div>
+
+                    <button id="download-stego" class="btn btn--primary btn--lg btn--full-width">
+                        📥 Download Stego Image
+                    </button>
+                </div>
+            </div>
+
+            <!-- Decrypt Mode -->
+            <div id="decrypt-mode" class="mode-content" style="display: none;">
+                <div class="step-container">
+                    <!-- Step 1: Stego Image -->
+                    <div class="step">
+                        <h3>🖼️ Step 1: Load Stego Image</h3>
+                        <label class="form-label">Stego Image (PNG/BMP only):</label>
+                        <div id="stego-image-upload" class="file-upload">
+                            <div class="file-upload-content">
+                                <div class="file-upload-icon">🔍</div>
+                                <p>Drag & drop the stego image here or click to browse</p>
+                                <small>Supported: PNG, BMP</small>
+                            </div>
+                            <input type="file" id="stego-image" accept=".png,.bmp,image/png,image/bmp">
+                        </div>
+                        <div id="stego-input-preview" class="image-preview"></div>
+                    </div>
+
+                    <!-- Step 2: Decryption Settings -->
+                    <div class="step">
+                        <h3>🔓 Step 2: Enter Passphrase</h3>
+                        <div class="form-group">
+                            <label class="form-label" for="decrypt-passphrase">Passphrase:</label>
+                            <div class="password-input">
+                                <input type="password" id="decrypt-passphrase" class="form-control" 
+                                    placeholder="Enter the same passphrase used for encryption">
+                                <button type="button" id="decrypt-toggle" class="password-toggle">🙈</button>
+                            </div>
+                        </div>
+
+                        <button id="decrypt-btn" class="btn btn--primary btn--lg btn--full-width" disabled>
+                            <span class="btn-text">🔓 Extract & Decrypt Data</span>
+                            <div class="btn-loader"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div id="decrypt-progress" class="progress-container" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p class="progress-text">Initializing...</p>
+                </div>
+
+                <!-- Results -->
+                <div id="decrypt-results" class="results-container" style="display: none;">
+                    <h3>✅ Decryption Complete!</h3>
+                    
+                    <div class="extracted-content">
+                        <h4>Extracted Data:</h4>
+                        <div id="extracted-display" class="content-display"></div>
+                        <button id="download-extracted" class="btn btn--secondary" style="display: none;">
+                            📥 Download Extracted File
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tutorial Mode -->
+            <div id="tutorial-mode" class="mode-content" style="display: none;">
+                <h2>🎓 Tutorial: Pixel-Level Analysis</h2>
+                
+                <!-- Tutorial Navigation -->
+                <div class="tutorial-nav">
+                    <button class="tutorial-nav-btn active" data-tutorial="overview">Overview</button>
+                    <button class="tutorial-nav-btn" data-tutorial="pixel-analysis">Pixel Analysis</button>
+                    <button class="tutorial-nav-btn" data-tutorial="step-by-step">Step by Step</button>
+                    <button class="tutorial-nav-btn" data-tutorial="binary-view">Binary View</button>
+                </div>
+
+                <!-- Overview Tab -->
+                <div id="overview-tutorial" class="tutorial-content active">
+                    <div class="tutorial-overview">
+                        <h3>Understanding LSB Steganography</h3>
+                        <div class="concept-grid">
+                            <div class="concept-card">
+                                <h4>🖼️ Image Structure</h4>
+                                <p>Each pixel contains RGB values (0-255). We modify only the least significant bit to hide data imperceptibly.</p>
+                            </div>
+                            <div class="concept-card">
+                                <h4>🔢 Binary Representation</h4>
+                                <p>Every pixel value is converted to 8-bit binary for LSB manipulation. Only the rightmost bit is changed.</p>
+                            </div>
+                            <div class="concept-card">
+                                <h4>🔐 Data Embedding</h4>
+                                <p>Secret data bits replace the LSB of RGB channels sequentially, creating virtually undetectable changes.</p>
+                            </div>
+                            <div class="concept-card">
+                                <h4>🔒 AES Encryption</h4>
+                                <p>Data is encrypted with AES-256-CBC before embedding, ensuring security even if steganography is detected.</p>
+                            </div>
+                            <div class="concept-card">
+                                <h4>📊 Quality Metrics</h4>
+                                <p>PSNR (Peak Signal-to-Noise Ratio) measures image quality degradation after embedding.</p>
+                            </div>
+                            <div class="concept-card">
+                                <h4>🎯 Capacity Analysis</h4>
+                                <p>Maximum capacity = (width × height × 3) / 8 bytes, using all RGB channels for data storage.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pixel Analysis Tab -->
+                <div id="pixel-analysis-tutorial" class="tutorial-content">
+                    <div class="pixel-comparison">
+                        <h3>Pixel Value Comparison</h3>
+                        <p>Click on any pixel in the images below to see detailed before/after analysis. This section becomes active after performing an encryption.</p>
+                        
+                        <!-- Image Canvas Containers -->
+                        <div class="image-analysis-grid">
+                            <div class="image-analysis-item">
+                                <h4>Original Image</h4>
+                                <canvas id="original-analysis-canvas" width="300" height="200" style="border: 2px solid var(--color-border); border-radius: var(--radius-md);"></canvas>
+                                <div class="pixel-info" id="original-pixel-info">
+                                    Perform an encryption first to enable pixel analysis
+                                </div>
+                            </div>
+                            
+                            <div class="image-analysis-item">
+                                <h4>Stego Image</h4>
+                                <canvas id="stego-analysis-canvas" width="300" height="200" style="border: 2px solid var(--color-border); border-radius: var(--radius-md);"></canvas>
+                                <div class="pixel-info" id="stego-pixel-info">
+                                    Perform an encryption first to enable pixel analysis
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pixel Details Display -->
+                        <div class="pixel-details" id="pixel-details" style="display: none;">
+                            <h4>Selected Pixel Analysis</h4>
+                            <div class="pixel-comparison-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Channel</th>
+                                            <th>Original</th>
+                                            <th>Binary</th>
+                                            <th>Modified</th>
+                                            <th>Binary</th>
+                                            <th>LSB Changed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pixel-comparison-data">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step by Step Tab -->
+                <div id="step-by-step-tutorial" class="tutorial-content">
+                    <div class="step-by-step-process">
+                        <h3>Encryption Process Visualization</h3>
+                        
+                        <div class="process-steps">
+                            <div class="process-step" id="step-1">
+                                <div class="step-header">
+                                    <span class="step-number">1</span>
+                                    <h4>Data Preparation</h4>
+                                </div>
+                                <div class="step-content">
+                                    <div class="data-display">
+                                        <label>Secret Text:</label>
+                                        <input type="text" id="demo-secret-text" class="form-control" placeholder="Enter text to see binary conversion" maxlength="20">
+                                        <div class="binary-output" id="demo-binary-output">Enter text above to see binary representation</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="process-step" id="step-2">
+                                <div class="step-header">
+                                    <span class="step-number">2</span>
+                                    <h4>AES Encryption</h4>
+                                </div>
+                                <div class="step-content">
+                                    <div class="encryption-demo">
+                                        <div class="crypto-flow">
+                                            <div class="crypto-box">Original Data</div>
+                                            <div class="crypto-arrow">→</div>
+                                            <div class="crypto-box">PBKDF2 Key</div>
+                                            <div class="crypto-arrow">→</div>
+                                            <div class="crypto-box">AES-256-CBC</div>
+                                            <div class="crypto-arrow">→</div>
+                                            <div class="crypto-box">Encrypted Data</div>
+                                        </div>
+                                        <p style="margin-top: var(--space-16); text-align: center; color: var(--color-text-secondary);">
+                                            Data is encrypted using AES-256-CBC with a key derived from your password using PBKDF2 (100,000 iterations)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="process-step" id="step-3">
+                                <div class="step-header">
+                                    <span class="step-number">3</span>
+                                    <h4>LSB Embedding</h4>
+                                </div>
+                                <div class="step-content">
+                                    <div class="lsb-demo">
+                                        <p>This demo shows how data bits are embedded into image pixels:</p>
+                                        <div class="pixel-grid" id="demo-pixel-grid">
+                                            <!-- Will be populated by JavaScript -->
+                                        </div>
+                                        <div class="embedding-controls">
+                                            <button class="btn btn--primary" id="demo-embed-btn">Start Embedding Demo</button>
+                                            <div class="embedding-progress" id="demo-embedding-progress">
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill"></div>
+                                                </div>
+                                                <div class="current-operation">Ready to start...</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Binary View Tab -->
+                <div id="binary-view-tutorial" class="tutorial-content">
+                    <div class="binary-analysis">
+                        <h3>Binary Data Flow</h3>
+                        <p>This section shows the binary representation of data at each stage. Perform an encryption to see actual data.</p>
+                        
+                        <div class="binary-sections">
+                            <div class="binary-section">
+                                <h4>Secret Data (Binary)</h4>
+                                <div class="binary-display" id="secret-binary-display">
+                                    No data to display. Perform an encryption first.
+                                </div>
+                            </div>
+
+                            <div class="binary-section">
+                                <h4>Encrypted Data (Binary)</h4>
+                                <div class="binary-display" id="encrypted-binary-display">
+                                    No data to display. Perform an encryption first.
+                                </div>
+                            </div>
+
+                            <div class="binary-section">
+                                <h4>Embedding Sequence</h4>
+                                <div class="embedding-sequence" id="embedding-sequence-display">
+                                    <div class="sequence-legend">
+                                        <span class="legend-item"><span class="color-box length-data"></span> Length Data (32 bits)</span>
+                                        <span class="legend-item"><span class="color-box encrypted-data"></span> Encrypted Payload</span>
+                                    </div>
+                                    <div class="bit-sequence" id="bit-sequence">
+                                        No data to display. Perform an encryption first.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Success Message -->
+        <div id="success-message" class="success-message" style="display: none;">
+            <div class="success-content">
+                <span>✅</span>
+                <span class="success-text">Success message</span>
+                <button class="success-close">&times;</button>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="error-message" style="display: none;">
+            <div class="error-content">
+                <span>❌</span>
+                <span class="error-text">Error message</span>
+                <button class="error-close">&times;</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./app-integrated.js"></script>
+</body>
+</html>
