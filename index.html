@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Image Steganography Tool</title>
     <link rel="stylesheet" href="./style-complete.css">
 </head>
+
 <body>
     <div class="container">
         <!-- Header -->
@@ -45,7 +47,7 @@
 
                         <div id="text-tab" class="tab-content active">
                             <label class="form-label" for="secret-text">Secret Text:</label>
-                            <textarea id="secret-text" class="form-control" rows="4" 
+                            <textarea id="secret-text" class="form-control" rows="4"
                                 placeholder="Enter your secret message here..."></textarea>
                         </div>
 
@@ -83,7 +85,7 @@
                         <div class="form-group">
                             <label class="form-label" for="encrypt-passphrase">Passphrase (Min 6 characters):</label>
                             <div class="password-input">
-                                <input type="password" id="encrypt-passphrase" class="form-control" 
+                                <input type="password" id="encrypt-passphrase" class="form-control"
                                     placeholder="Enter a strong passphrase">
                                 <button type="button" id="encrypt-toggle" class="password-toggle">🙈</button>
                             </div>
@@ -113,7 +115,7 @@
                 <!-- Results -->
                 <div id="encrypt-results" class="results-container" style="display: none;">
                     <h3>✅ Encryption Complete!</h3>
-                    
+
                     <div class="results-grid">
                         <div class="result-item">
                             <h4>Original Image</h4>
@@ -166,7 +168,7 @@
                         <div class="form-group">
                             <label class="form-label" for="decrypt-passphrase">Passphrase:</label>
                             <div class="password-input">
-                                <input type="password" id="decrypt-passphrase" class="form-control" 
+                                <input type="password" id="decrypt-passphrase" class="form-control"
                                     placeholder="Enter the same passphrase used for encryption">
                                 <button type="button" id="decrypt-toggle" class="password-toggle">🙈</button>
                             </div>
@@ -190,7 +192,7 @@
                 <!-- Results -->
                 <div id="decrypt-results" class="results-container" style="display: none;">
                     <h3>✅ Decryption Complete!</h3>
-                    
+
                     <div class="extracted-content">
                         <h4>Extracted Data:</h4>
                         <div id="extracted-display" class="content-display"></div>
@@ -204,7 +206,7 @@
             <!-- Tutorial Mode -->
             <div id="tutorial-mode" class="mode-content" style="display: none;">
                 <h2>🎓 Tutorial: Pixel-Level Analysis</h2>
-                
+
                 <!-- Tutorial Navigation -->
                 <div class="tutorial-nav">
                     <button class="tutorial-nav-btn active" data-tutorial="overview">Overview</button>
@@ -220,27 +222,33 @@
                         <div class="concept-grid">
                             <div class="concept-card">
                                 <h4>🖼️ Image Structure</h4>
-                                <p>Each pixel contains RGB values (0-255). We modify only the least significant bit to hide data imperceptibly.</p>
+                                <p>Each pixel contains RGB values (0-255). We modify only the least significant bit to
+                                    hide data imperceptibly.</p>
                             </div>
                             <div class="concept-card">
                                 <h4>🔢 Binary Representation</h4>
-                                <p>Every pixel value is converted to 8-bit binary for LSB manipulation. Only the rightmost bit is changed.</p>
+                                <p>Every pixel value is converted to 8-bit binary for LSB manipulation. Only the
+                                    rightmost bit is changed.</p>
                             </div>
                             <div class="concept-card">
                                 <h4>🔐 Data Embedding</h4>
-                                <p>Secret data bits replace the LSB of RGB channels sequentially, creating virtually undetectable changes.</p>
+                                <p>Secret data bits replace the LSB of RGB channels sequentially, creating virtually
+                                    undetectable changes.</p>
                             </div>
                             <div class="concept-card">
                                 <h4>🔒 AES Encryption</h4>
-                                <p>Data is encrypted with AES-256-CBC before embedding, ensuring security even if steganography is detected.</p>
+                                <p>Data is encrypted with AES-256-CBC before embedding, ensuring security even if
+                                    steganography is detected.</p>
                             </div>
                             <div class="concept-card">
                                 <h4>📊 Quality Metrics</h4>
-                                <p>PSNR (Peak Signal-to-Noise Ratio) measures image quality degradation after embedding.</p>
+                                <p>PSNR (Peak Signal-to-Noise Ratio) measures image quality degradation after embedding.
+                                </p>
                             </div>
                             <div class="concept-card">
                                 <h4>🎯 Capacity Analysis</h4>
-                                <p>Maximum capacity = (width × height × 3) / 8 bytes, using all RGB channels for data storage.</p>
+                                <p>Maximum capacity = (width × height × 3) / 8 bytes, using all RGB channels for data
+                                    storage.</p>
                             </div>
                         </div>
                     </div>
@@ -250,21 +258,24 @@
                 <div id="pixel-analysis-tutorial" class="tutorial-content">
                     <div class="pixel-comparison">
                         <h3>Pixel Value Comparison</h3>
-                        <p>Click on any pixel in the images below to see detailed before/after analysis. This section becomes active after performing an encryption.</p>
-                        
+                        <p>Click on any pixel in the images below to see detailed before/after analysis. This section
+                            becomes active after performing an encryption.</p>
+
                         <!-- Image Canvas Containers -->
                         <div class="image-analysis-grid">
                             <div class="image-analysis-item">
                                 <h4>Original Image</h4>
-                                <canvas id="original-analysis-canvas" width="300" height="200" style="border: 2px solid var(--color-border); border-radius: var(--radius-md);"></canvas>
+                                <canvas id="original-analysis-canvas" width="300" height="200"
+                                    style="border: 2px solid var(--color-border); border-radius: var(--radius-md);"></canvas>
                                 <div class="pixel-info" id="original-pixel-info">
                                     Perform an encryption first to enable pixel analysis
                                 </div>
                             </div>
-                            
+
                             <div class="image-analysis-item">
                                 <h4>Stego Image</h4>
-                                <canvas id="stego-analysis-canvas" width="300" height="200" style="border: 2px solid var(--color-border); border-radius: var(--radius-md);"></canvas>
+                                <canvas id="stego-analysis-canvas" width="300" height="200"
+                                    style="border: 2px solid var(--color-border); border-radius: var(--radius-md);"></canvas>
                                 <div class="pixel-info" id="stego-pixel-info">
                                     Perform an encryption first to enable pixel analysis
                                 </div>
@@ -291,6 +302,103 @@
                                 </table>
                             </div>
                         </div>
+
+                        <!-- Add this new section to your tutorial HTML after the existing Pixel Value Comparison section -->
+
+                        <!-- Modified Pixels List Section -->
+                        <div class="modified-pixels-summary">
+                            <h4>📊 Modified Pixels Summary</h4>
+                            <div class="summary-stats">
+                                <div class="summary-card">
+                                    <span class="summary-icon">🔥</span>
+                                    <div class="summary-content">
+                                        <span class="summary-value" id="total-modified-pixels">0</span>
+                                        <span class="summary-label">Total Modified Pixels</span>
+                                    </div>
+                                </div>
+                                <div class="summary-card">
+                                    <span class="summary-icon">📈</span>
+                                    <div class="summary-content">
+                                        <span class="summary-value" id="modification-percentage">0%</span>
+                                        <span class="summary-label">Percentage Modified</span>
+                                    </div>
+                                </div>
+                                <div class="summary-card">
+                                    <span class="summary-icon">🎨</span>
+                                    <div class="summary-content">
+                                        <span class="summary-value" id="channels-modified">0</span>
+                                        <span class="summary-label">Channels Changed</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Complete Modified Pixels List -->
+                        <div class="modified-pixels-list">
+                            <div class="list-header">
+                                <h4>🔍 Complete List of Modified Pixels</h4>
+                                <div class="list-controls">
+                                    <div class="filter-controls">
+                                        <select id="channel-filter" class="form-control">
+                                            <option value="all">All Channels</option>
+                                            <option value="red">Red Channel Only</option>
+                                            <option value="green">Green Channel Only</option>
+                                            <option value="blue">Blue Channel Only</option>
+                                        </select>
+                                        <button id="export-pixel-list" class="btn btn--sm btn--outline">📤 Export
+                                            CSV</button>
+                                    </div>
+                                    <div class="view-toggle">
+                                        <button id="view-toggle-btn" class="btn btn--sm" data-view="compact">📋 Switch
+                                            to Detailed View</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Compact View -->
+                            <div id="compact-view" class="pixels-view active">
+                                <div class="pixels-grid" id="modified-pixels-grid">
+                                    <p class="no-data">Perform an encryption first to see modified pixels</p>
+                                </div>
+                            </div>
+
+                            <!-- Detailed Table View -->
+                            <div id="detailed-view" class="pixels-view">
+                                <div class="pixels-table-container">
+                                    <table class="pixels-table" id="modified-pixels-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Pixel #</th>
+                                                <th>Position (X,Y)</th>
+                                                <th>Channel</th>
+                                                <th>Original Value</th>
+                                                <th>Modified Value</th>
+                                                <th>Change (±)</th>
+                                                <th>Binary Original</th>
+                                                <th>Binary Modified</th>
+                                                <th>LSB Changed</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="modified-pixels-tbody">
+                                            <tr>
+                                                <td colspan="9" class="no-data">Perform an encryption first to see
+                                                    modified pixels</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Pagination for large datasets -->
+                            <div class="pagination-controls" id="pixel-pagination" style="display: none;">
+                                <button id="prev-page" class="btn btn--sm btn--outline">← Previous</button>
+                                <span class="page-info">
+                                    Page <span id="current-page">1</span> of <span id="total-pages">1</span>
+                                    (<span id="showing-range">0-0</span> of <span id="total-pixels">0</span> pixels)
+                                </span>
+                                <button id="next-page" class="btn btn--sm btn--outline">Next →</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -298,7 +406,7 @@
                 <div id="step-by-step-tutorial" class="tutorial-content">
                     <div class="step-by-step-process">
                         <h3>Encryption Process Visualization</h3>
-                        
+
                         <div class="process-steps">
                             <div class="process-step" id="step-1">
                                 <div class="step-header">
@@ -308,8 +416,10 @@
                                 <div class="step-content">
                                     <div class="data-display">
                                         <label>Secret Text:</label>
-                                        <input type="text" id="demo-secret-text" class="form-control" placeholder="Enter text to see binary conversion" maxlength="20">
-                                        <div class="binary-output" id="demo-binary-output">Enter text above to see binary representation</div>
+                                        <input type="text" id="demo-secret-text" class="form-control"
+                                            placeholder="Enter text to see binary conversion" maxlength="20">
+                                        <div class="binary-output" id="demo-binary-output">Enter text above to see
+                                            binary representation</div>
                                     </div>
                                 </div>
                             </div>
@@ -330,8 +440,10 @@
                                             <div class="crypto-arrow">→</div>
                                             <div class="crypto-box">Encrypted Data</div>
                                         </div>
-                                        <p style="margin-top: var(--space-16); text-align: center; color: var(--color-text-secondary);">
-                                            Data is encrypted using AES-256-CBC with a key derived from your password using PBKDF2 (100,000 iterations)
+                                        <p
+                                            style="margin-top: var(--space-16); text-align: center; color: var(--color-text-secondary);">
+                                            Data is encrypted using AES-256-CBC with a key derived from your password
+                                            using PBKDF2 (100,000 iterations)
                                         </p>
                                     </div>
                                 </div>
@@ -349,7 +461,8 @@
                                             <!-- Will be populated by JavaScript -->
                                         </div>
                                         <div class="embedding-controls">
-                                            <button class="btn btn--primary" id="demo-embed-btn">Start Embedding Demo</button>
+                                            <button class="btn btn--primary" id="demo-embed-btn">Start Embedding
+                                                Demo</button>
                                             <div class="embedding-progress" id="demo-embedding-progress">
                                                 <div class="progress-bar">
                                                     <div class="progress-fill"></div>
@@ -368,8 +481,9 @@
                 <div id="binary-view-tutorial" class="tutorial-content">
                     <div class="binary-analysis">
                         <h3>Binary Data Flow</h3>
-                        <p>This section shows the binary representation of data at each stage. Perform an encryption to see actual data.</p>
-                        
+                        <p>This section shows the binary representation of data at each stage. Perform an encryption to
+                            see actual data.</p>
+
                         <div class="binary-sections">
                             <div class="binary-section">
                                 <h4>Secret Data (Binary)</h4>
@@ -389,8 +503,10 @@
                                 <h4>Embedding Sequence</h4>
                                 <div class="embedding-sequence" id="embedding-sequence-display">
                                     <div class="sequence-legend">
-                                        <span class="legend-item"><span class="color-box length-data"></span> Length Data (32 bits)</span>
-                                        <span class="legend-item"><span class="color-box encrypted-data"></span> Encrypted Payload</span>
+                                        <span class="legend-item"><span class="color-box length-data"></span> Length
+                                            Data (32 bits)</span>
+                                        <span class="legend-item"><span class="color-box encrypted-data"></span>
+                                            Encrypted Payload</span>
                                     </div>
                                     <div class="bit-sequence" id="bit-sequence">
                                         No data to display. Perform an encryption first.
@@ -424,4 +540,5 @@
 
     <script src="./app-integrated.js"></script>
 </body>
+
 </html>
